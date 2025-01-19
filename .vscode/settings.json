@@ -2,5 +2,10 @@
     "grammarly.files.include": ["**/*.md", "**/*.mdx"],
     "files.associations": {
       "*.mdx": "markdown",
-    }
+    },
+    "cSpell.words": [
+      "LASTVALUE",
+      "OOTBI",
+      "opdata"
+    ]
 }

@@ -18,6 +18,14 @@ This template has been tested on Object First OOTBI 1.5.54.10104 (VSA).
 1. Link the template to a host.
 1. Configure the following macros: {$OOTBI.API.URL}, {$OOTBI.USER}, and {$OOTBI.PASSWORD}.
 
+## Screenshots
+
+![Items](./media/items.png)
+
+![Triggers](./media/triggers.png)
+
+![Discovery](./media/discovery.png)
+
 ### Macros used
 
 |Name|Description|Default|

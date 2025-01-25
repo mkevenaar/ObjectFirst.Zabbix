@@ -1,0 +1,11 @@
+LASTVALUE
+maint
+OOTBI
+opdata
+Zabbix
+UUID
+Uptime
+uptime
+10m
+ok
+customizable

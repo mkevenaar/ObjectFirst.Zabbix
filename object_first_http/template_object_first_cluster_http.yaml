@@ -1,0 +1,629 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  host_groups:
+    - uuid: 100249576aac43248b81f3ae1bff6ebc
+      name: 'Object First'
+  templates:
+    - uuid: b8c39e144f7b4454a106399770430f82
+      template: 'Object First OOTBI Cluster by HTTP'
+      name: 'Object First OOTBI Cluster by HTTP'
+      description: |
+        This template is designed to monitor an Object First OOTBI Cluster.
+        
+        Setup:
+        1. Create a user to monitor the service or use an existing user.
+        2. Link the template to a host.
+        3. Configure the following macros: {$OOTBI.API.URL}, {$OOTBI.USER}, and {$OOTBI.PASSWORD}.
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 2f2f9680da034656a9031cc9aa7d7f9f
+          name: 'Cluster Status'
+          type: DEPENDENT
+          key: ootbi.get.cluster.status
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          description: 'Get the cluster status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.cluster.status
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: ootbi.get.metrics
+          tags:
+            - tag: component
+              value: status
+          triggers:
+            - uuid: e87bdcf5b6ae42b1959dbbc8340ffef0
+              expression: 'find(/Object First OOTBI Cluster by HTTP/ootbi.get.cluster.status,,"like","OK")=0'
+              name: 'Object First OOTBI: Cluster is not healthy'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: HIGH
+              description: 'Cluster reports it''s not healthy. Please inspect the cluster.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: fa1f7375540d40fd8826a530c981078d
+          name: 'Get errors'
+          type: DEPENDENT
+          key: ootbi.get.errors
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          description: 'The errors from API requests.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.error
+              error_handler: CUSTOM_VALUE
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: ootbi.get.metrics
+          tags:
+            - tag: component
+              value: status
+          triggers:
+            - uuid: ce22e052f97d45efa5094fceb412ee28
+              expression: 'length(last(/Object First OOTBI Cluster by HTTP/ootbi.get.errors))>0'
+              name: 'Object First OOTBI: There are errors in requests to API'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'Zabbix has received errors in response to API requests.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 0afcc7150b8e429cacf0ff31c05eda00
+          name: 'Get metrics'
+          type: SCRIPT
+          key: ootbi.get.metrics
+          delay: 5m
+          history: '0'
+          value_type: TEXT
+          trends: '0'
+          params: |
+            var Ootbi = {
+              params: {},
+              token: "",
+            
+              setParams: function (params) {
+                ["api_endpoint", "user", "password", "cluster_id"].forEach(function (field) {
+                  if (
+                    typeof params !== "object" ||
+                    typeof params[field] === "undefined" ||
+                    params[field] === ""
+                  ) {
+                    throw "Required param is not set: " + field + ".";
+                  }
+                });
+            
+                Ootbi.params = params;
+                if (
+                  typeof Ootbi.params.api_endpoint === "string" &&
+                  !Ootbi.params.api_endpoint.endsWith("/")
+                ) {
+                  Ootbi.params.api_endpoint += "/";
+                }
+              },
+            
+              login: function () {
+                var resp,
+                  login = new HttpRequest();
+                var data = JSON.stringify({
+                  username: Ootbi.params.user,
+                  password: btoa(Ootbi.params.password),
+                });
+                if (
+                  typeof Ootbi.params.http_proxy !== "undefined" &&
+                  Ootbi.params.http_proxy !== ""
+                ) {
+                  login.setProxy(Ootbi.params.http_proxy);
+                }
+                login.addHeader("Content-Type: application/json");
+                resp = login.post(Ootbi.params.api_endpoint + "api/v1/account/login", data);
+            
+                if (login.getStatus() !== 200 || resp === null) {
+                  throw "Login failed with status code " + login.getStatus() + ": " + resp;
+                }
+            
+                try {
+                  resp = JSON.parse(resp);
+                } catch (error) {
+                  throw "Failed to parse authentication token for the logon session.";
+                }
+                if (!resp.hasOwnProperty("token")) {
+                  throw "Auth response does not contain access token.";
+                }
+                Ootbi.token = resp["token"];
+              },
+            
+              request: function (url) {
+                var response,
+                  request = new HttpRequest();
+                if (
+                  typeof Ootbi.params.http_proxy !== "undefined" &&
+                  Ootbi.params.http_proxy !== ""
+                ) {
+                  request.setProxy(Ootbi.params.http_proxy);
+                }
+                if (Ootbi.token) {
+                  request.addHeader("Authorization: " + Ootbi.token);
+                  response = request.get(url);
+                }
+                if (request.getStatus() !== 200 || response === null) {
+                  throw (
+                    url +
+                    " - request failed with status code " +
+                    request.getStatus() +
+                    ": " +
+                    response
+                  );
+                }
+                try {
+                  return JSON.parse(response);
+                } catch (error) {
+                  throw "Failed to parse response received from API.";
+                }
+              },
+            
+              getMetricsData: function () {
+                var data = {};
+                endpoints = {
+                  cluster: "api/v1/clusters/" + Ootbi.params.cluster_id,
+                  license: "api/v1/clusters/" + Ootbi.params.cluster_id + "/license",
+                  alerts: "api/v1/alerts",
+                };
+            
+                Object.keys(endpoints).forEach(function (key) {
+                  data[key] = Ootbi.request(Ootbi.params.api_endpoint + endpoints[key]);
+                });
+            
+                return data;
+              },
+            };
+            
+            try {
+              Ootbi.setParams(JSON.parse(value));
+              Ootbi.login();
+              return JSON.stringify(Ootbi.getMetricsData());
+            } catch (error) {
+              error += String(error).endsWith(".") ? "" : ".";
+              Zabbix.log(3, "[ OOTBI ] ERROR: " + error);
+              return JSON.stringify({ error: error });
+            }
+          description: 'The result of API requests is expressed in the JSON.'
+          timeout: '{$OOTBI.DATA.TIMEOUT}'
+          parameters:
+            - name: api_endpoint
+              value: '{$OOTBI.API.URL}'
+            - name: cluster_id
+              value: '{$OOTBI.CLUSTER.ID}'
+            - name: http_proxy
+              value: '{$OOTBI.HTTP.PROXY}'
+            - name: password
+              value: '{$OOTBI.PASSWORD}'
+            - name: user
+              value: '{$OOTBI.USER}'
+          tags:
+            - tag: component
+              value: raw
+      discovery_rules:
+        - uuid: 1f80923146b34203a97e417b158dd14c
+          name: 'Node discovery'
+          type: DEPENDENT
+          key: ootbi.node.discovery
+          delay: '0'
+          description: 'Discovery of cluster nodes.'
+          host_prototypes:
+            - uuid: 892c802dfd7b4d8b9b45db3e535c5ea4
+              host: '{#NAME}'
+              name: '{#NAME}'
+              inventory_mode: AUTOMATIC
+              group_links:
+                - group:
+                    name: 'Object First'
+              templates:
+                - name: 'Object First OOTBI Host by HTTP'
+              macros:
+                - macro: '{$OOTBI.HOST.ID}'
+                  value: '{#ID}'
+                  description: 'The OOTBI Host ID. This is discovered automatically'
+          master_item:
+            key: ootbi.get.metrics
+          lld_macro_paths:
+            - lld_macro: '{#ID}'
+              path: $.id
+            - lld_macro: '{#NAME}'
+              path: $.name
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.cluster.nodes[:]'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+      tags:
+        - tag: class
+          value: software
+        - tag: target
+          value: 'Object First'
+      macros:
+        - macro: '{$OOTBI.API.URL}'
+          value: 'https://localhost:8443'
+          description: 'The OOTBI Cluster endpoint is a URL in the format `<scheme>://<host>:<port>`.'
+        - macro: '{$OOTBI.CLUSTER.ID}'
+          description: 'The OOTBI Cluster ID (UUID). The Cluster UUID can be found in Settings. Optional, defaults to first cluster.'
+        - macro: '{$OOTBI.DATA.TIMEOUT}'
+          value: '10'
+          description: 'A response timeout for the API.'
+        - macro: '{$OOTBI.HTTP.PROXY}'
+          description: 'Sets the HTTP proxy to `http_proxy` value. If this parameter is empty, then no proxy is used.'
+        - macro: '{$OOTBI.PASSWORD}'
+          type: SECRET_TEXT
+          description: 'The `password` of the Object First OOTBI Cluster account. It is used to obtain an access token.'
+        - macro: '{$OOTBI.USER}'
+          description: 'The `username` of the Object First OOTBI Cluster account. It is used to obtain an access token.'
+    - uuid: e632582eb6b34ad8a33d798cc22f4cac
+      template: 'Object First OOTBI Host by HTTP'
+      name: 'Object First OOTBI Host by HTTP'
+      description: 'This template is designed to monitor an Object First OOTBI Host and will automatically be attached to hosts discovered from your cluster.'
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: da3ae53a7f314ec9bb4164352eb2fa06
+          name: 'Global Disks Status'
+          type: DEPENDENT
+          key: ootbi.get.disk.status
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          description: 'Get the global disk status.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.disks.status
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: ootbi.get.metrics
+          tags:
+            - tag: component
+              value: status
+          triggers:
+            - uuid: 369c34dd7ebc49e583097201fb3028c6
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.disk.status,,"like","ok")=0'
+              name: 'Object First OOTBI Disks not healthy'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: HIGH
+              description: 'The host reports its disks are healthy. Please inspect the host.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: d44af2d06abc454daf266d738fe9fdbe
+          name: 'Get errors'
+          type: DEPENDENT
+          key: ootbi.get.errors
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          description: 'The errors from API requests.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.error
+              error_handler: CUSTOM_VALUE
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: ootbi.get.metrics
+          tags:
+            - tag: component
+              value: status
+          triggers:
+            - uuid: 3296f6da94cc434ba742dfafef60a35b
+              expression: 'length(last(/Object First OOTBI Host by HTTP/ootbi.get.errors))>0'
+              name: 'There are errors in requests to API'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'Zabbix has received errors in response to API requests.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 9e08a8d307324823912ce57e9a8c9fed
+          name: 'Host Status'
+          type: DEPENDENT
+          key: ootbi.get.host.status
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          description: 'Get the host status.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.hosts.members.[?(@.id==''{$OOTBI.HOST.ID}'')].status.first()'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: ootbi.get.metrics
+          tags:
+            - tag: component
+              value: status
+          triggers:
+            - uuid: 4e72f96ce6454f75872c0c64a1b30966
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Ok")=0'
+              name: 'Object First OOTBI Host is not healthy'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: HIGH
+              description: 'The host reports its not healthy. Please inspect the host.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 40bdc3ee5ff34f1197acebbc649f3d49
+          name: Uptime
+          type: DEPENDENT
+          key: ootbi.get.host.uptime
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          description: 'The uptime of the node.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.hosts.members.[?(@.id==''{$OOTBI.HOST.ID}'')].uptimeInSec.first()'
+          master_item:
+            key: ootbi.get.metrics
+          tags:
+            - tag: component
+              value: status
+          triggers:
+            - uuid: 951810b79dc243d09bad0937ba0745ad
+              expression: 'last(/Object First OOTBI Host by HTTP/ootbi.get.host.uptime)<10'
+              name: 'Object First OOTBI: Node restarted (uptime < 10m)'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'The cluster node''s uptime is less than 10 minutes.'
+              manual_close: 'YES'
+        - uuid: d5cd5ea081504df3a33deefe665ac954
+          name: 'Get metrics'
+          type: SCRIPT
+          key: ootbi.get.metrics
+          delay: 5m
+          history: '0'
+          value_type: TEXT
+          trends: '0'
+          params: |
+            var Ootbi = {
+              params: {},
+              token: "",
+            
+              setParams: function (params) {
+                ["api_endpoint", "user", "password", "cluster_id", "host_id"].forEach(function (field) {
+                  if (
+                    typeof params !== "object" ||
+                    typeof params[field] === "undefined" ||
+                    params[field] === ""
+                  ) {
+                    throw "Required param is not set: " + field + ".";
+                  }
+                });
+            
+                Ootbi.params = params;
+                if (
+                  typeof Ootbi.params.api_endpoint === "string" &&
+                  !Ootbi.params.api_endpoint.endsWith("/")
+                ) {
+                  Ootbi.params.api_endpoint += "/";
+                }
+              },
+            
+              login: function () {
+                var resp,
+                  login = new HttpRequest();
+                var data = JSON.stringify({
+                  username: Ootbi.params.user,
+                  password: btoa(Ootbi.params.password),
+                });
+                if (
+                  typeof Ootbi.params.http_proxy !== "undefined" &&
+                  Ootbi.params.http_proxy !== ""
+                ) {
+                  login.setProxy(Ootbi.params.http_proxy);
+                }
+                login.addHeader("Content-Type: application/json");
+                resp = login.post(Ootbi.params.api_endpoint + "api/v1/account/login", data);
+            
+                if (login.getStatus() !== 200 || resp === null) {
+                  throw "Login failed with status code " + login.getStatus() + ": " + resp;
+                }
+            
+                try {
+                  resp = JSON.parse(resp);
+                } catch (error) {
+                  throw "Failed to parse authentication token for the logon session.";
+                }
+                if (!resp.hasOwnProperty("token")) {
+                  throw "Auth response does not contain access token.";
+                }
+                Ootbi.token = resp["token"];
+              },
+            
+              request: function (url) {
+                var response,
+                  request = new HttpRequest();
+                if (
+                  typeof Ootbi.params.http_proxy !== "undefined" &&
+                  Ootbi.params.http_proxy !== ""
+                ) {
+                  request.setProxy(Ootbi.params.http_proxy);
+                }
+                if (Ootbi.token) {
+                  request.addHeader("Authorization: " + Ootbi.token);
+                  response = request.get(url);
+                }
+                if (request.getStatus() !== 200 || response === null) {
+                  throw (
+                    url +
+                    " - request failed with status code " +
+                    request.getStatus() +
+                    ": " +
+                    response
+                  );
+                }
+                try {
+                  return JSON.parse(response);
+                } catch (error) {
+                  throw "Failed to parse response received from API. " + error;
+                }
+              },
+            
+              getMetricsData: function () {
+                var data = {};
+                endpoints = {
+                  hosts: "api/v1/clusters/" + Ootbi.params.cluster_id + "/nodes",
+                  disks: "api/v1/clusters/" + Ootbi.params.cluster_id + "/nodes/" + Ootbi.params.host_id + "/disks",
+                };
+            
+                Object.keys(endpoints).forEach(function (key) {
+                  data[key] = Ootbi.request(Ootbi.params.api_endpoint + endpoints[key]);
+                });
+            
+                return data;
+              },
+            };
+            
+            try {
+              Ootbi.setParams(JSON.parse(value));
+              Ootbi.login();
+              return JSON.stringify(Ootbi.getMetricsData());
+            } catch (error) {
+              error += String(error).endsWith(".") ? "" : ".";
+              Zabbix.log(3, "[ OOTBI ] ERROR: " + error);
+              return JSON.stringify({ error: error });
+            }
+          description: 'The result of API requests is expressed in the JSON.'
+          timeout: '{$OOTBI.DATA.TIMEOUT}'
+          parameters:
+            - name: api_endpoint
+              value: '{$OOTBI.API.URL}'
+            - name: cluster_id
+              value: '{$OOTBI.CLUSTER.ID}'
+            - name: host_id
+              value: '{$OOTBI.HOST.ID}'
+            - name: http_proxy
+              value: '{$OOTBI.HTTP.PROXY}'
+            - name: password
+              value: '{$OOTBI.PASSWORD}'
+            - name: user
+              value: '{$OOTBI.USER}'
+          tags:
+            - tag: component
+              value: raw
+      discovery_rules:
+        - uuid: 03cb114ef6cc4d16bf529f9a91183ceb
+          name: 'Disk Discovery'
+          type: DEPENDENT
+          key: ootbi.host.disk.discovery
+          delay: '0'
+          description: 'Discovery of node disks.'
+          item_prototypes:
+            - uuid: 03fdfe9f126e4aefa84a14b0be6a7574
+              name: 'Disk [{#SLOT}]: Get data'
+              type: DEPENDENT
+              key: 'ootbi.disk.raw[{#ID}]'
+              delay: '0'
+              history: '0'
+              value_type: TEXT
+              trends: '0'
+              description: 'Gets raw data from the disk in slot [{#SLOT}]'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.disks.disks.[?(@.id==''{#ID}'')].first()'
+              master_item:
+                key: ootbi.get.metrics
+              tags:
+                - tag: component
+                  value: disks
+                - tag: component
+                  value: raw
+                - tag: disk
+                  value: '{#SLOT}'
+            - uuid: 0a1b360d8f1c4441ac2025fec22b3244
+              name: 'Disk Status'
+              type: DEPENDENT
+              key: 'ootbi.disk.status[{#SLOT}]'
+              delay: '0'
+              value_type: TEXT
+              trends: '0'
+              description: 'The status of the disk.'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.status
+              master_item:
+                key: 'ootbi.disk.raw[{#ID}]'
+              tags:
+                - tag: component
+                  value: disks
+                - tag: disk
+                  value: '{#SLOT}'
+              trigger_prototypes:
+                - uuid: 75b5173bb0b5419190871e6bf9fc93fb
+                  expression: 'find(/Object First OOTBI Host by HTTP/ootbi.disk.status[{#SLOT}],,"like","ok")=0'
+                  name: 'Object First OOTBI: Disk in slot {#SLOT} not ok'
+                  opdata: '{ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  description: 'The Disk in {#SLOT} is failed. Please check the disk in bay {#BAY}. Please download the support bundle and contact Object First Support.'
+                  manual_close: 'YES'
+          master_item:
+            key: ootbi.get.metrics
+          lld_macro_paths:
+            - lld_macro: '{#BAY}'
+              path: $.bay
+            - lld_macro: '{#ID}'
+              path: $.id
+            - lld_macro: '{#NAME}'
+              path: $.name
+            - lld_macro: '{#SLOT}'
+              path: $.slot
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.disks.disks
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+      tags:
+        - tag: class
+          value: software
+        - tag: target
+          value: 'Object First'
+      macros:
+        - macro: '{$OOTBI.API.URL}'
+          value: 'https://localhost:8443'
+          description: 'The OOTBI Cluster endpoint is a URL in the format `<scheme>://<host>:<port>`.'
+        - macro: '{$OOTBI.CLUSTER.ID}'
+          description: 'The OOTBI Cluster ID (UUID). The Cluster UUID can be found in Settings. Optional, defaults to first cluster.'
+        - macro: '{$OOTBI.DATA.TIMEOUT}'
+          value: '10'
+          description: 'A response timeout for the API.'
+        - macro: '{$OOTBI.HOST.ID}'
+          description: 'The OOTBI Host ID. This is discovered automatically'
+        - macro: '{$OOTBI.HTTP.PROXY}'
+          description: 'Sets the HTTP proxy to `http_proxy` value. If this parameter is empty, then no proxy is used.'
+        - macro: '{$OOTBI.PASSWORD}'
+          type: SECRET_TEXT
+          description: 'The `password` of the Object First OOTBI Cluster account. It is used to obtain an access token.'
+        - macro: '{$OOTBI.USER}'
+          description: 'The `username` of the Object First OOTBI Cluster account. It is used to obtain an access token.'

@@ -5,31 +5,6 @@
 ![GitHub Releases (all releases)](https://img.shields.io/github/downloads/mkevenaar/ObjectFirst.Zabbix/total.svg)
 
 <!--ts-->
-* [Object First OOTBI Cluster by HTTP](#object-first-ootbi-cluster-by-http)
-  * [Overview](#overview)
-  * [Requirements](#requirements)
-  * [Tested versions](#tested-versions)
-  * [Setup](#setup)
-  * [Template: Object First OOTBI Cluster by HTTP](#template-object-first-ootbi-cluster-by-http)
-    * [Screenshots for Object First OOTBI Cluster by HTTP](#screenshots-for-object-first-ootbi-cluster-by-http)
-    * [Macros for Object First OOTBI Cluster by HTTP](#macros-for-object-first-ootbi-cluster-by-http)
-    * [Items for Object First OOTBI Cluster by HTTP](#items-for-object-first-ootbi-cluster-by-http)
-    * [Triggers for Object First OOTBI Cluster by HTTP](#triggers-for-object-first-ootbi-cluster-by-http)
-    * [LLD rule Node discovery](#lld-rule-node-discovery)
-    * [Host Prototypes for Node discovery](#host-prototypes-for-node-discovery)
-  * [Template: Object First OOTBI Host by HTTP](#template-object-first-ootbi-host-by-http)
-    * [Screenshots for Object First OOTBI Host by HTTP](#screenshots-for-object-first-ootbi-host-by-http)
-    * [Macros for Object First OOTBI Host by HTTP](#macros-for-object-first-ootbi-host-by-http)
-    * [Items for Object First OOTBI Host by HTTP](#items-for-object-first-ootbi-host-by-http)
-    * [Triggers for Object First OOTBI Host by HTTP](#triggers-for-object-first-ootbi-host-by-http)
-    * [LLD rule Disk Discovery](#lld-rule-disk-discovery)
-    * [Item prototypes for Disk Discovery](#item-prototypes-for-disk-discovery)
-    * [Trigger prototypes for Disk Discovery](#trigger-prototypes-for-disk-discovery)
-  * [Feedback](#feedback)
-
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Sat Jan 25 14:10:11 UTC 2025 -->
-
 <!--te-->
 
 ## Overview

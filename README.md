@@ -5,6 +5,7 @@
 ![GitHub Releases (all releases)](https://img.shields.io/github/downloads/mkevenaar/ObjectFirst.Zabbix/total.svg)
 
 <!--ts-->
+
 <!--te-->
 
 ## Overview

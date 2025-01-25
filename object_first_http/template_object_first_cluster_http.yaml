@@ -12,11 +12,11 @@ zabbix_export:
       name: 'Object First OOTBI Cluster by HTTP'
       description: |
         This template is designed to monitor an Object First OOTBI Cluster.
-        
+
         Setup:
         1. Create a user to monitor the service or use an existing user.
         2. Link the template to a host.
-        3. Configure the following macros: {$OOTBI.API.URL}, {$OOTBI.USER}, and {$OOTBI.PASSWORD}.
+        3. Configure the following macros: {$OOTBI.API.URL}, {$OOTBI.CLUSTER.ID}, {$OOTBI.USER}, and {$OOTBI.PASSWORD}.
       groups:
         - name: Templates/Applications
       items:
@@ -93,7 +93,7 @@ zabbix_export:
             var Ootbi = {
               params: {},
               token: "",
-            
+
               setParams: function (params) {
                 ["api_endpoint", "user", "password", "cluster_id"].forEach(function (field) {
                   if (
@@ -104,7 +104,7 @@ zabbix_export:
                     throw "Required param is not set: " + field + ".";
                   }
                 });
-            
+
                 Ootbi.params = params;
                 if (
                   typeof Ootbi.params.api_endpoint === "string" &&
@@ -113,7 +113,7 @@ zabbix_export:
                   Ootbi.params.api_endpoint += "/";
                 }
               },
-            
+
               login: function () {
                 var resp,
                   login = new HttpRequest();
@@ -129,11 +129,11 @@ zabbix_export:
                 }
                 login.addHeader("Content-Type: application/json");
                 resp = login.post(Ootbi.params.api_endpoint + "api/v1/account/login", data);
-            
+
                 if (login.getStatus() !== 200 || resp === null) {
                   throw "Login failed with status code " + login.getStatus() + ": " + resp;
                 }
-            
+
                 try {
                   resp = JSON.parse(resp);
                 } catch (error) {
@@ -144,7 +144,7 @@ zabbix_export:
                 }
                 Ootbi.token = resp["token"];
               },
-            
+
               request: function (url) {
                 var response,
                   request = new HttpRequest();
@@ -173,7 +173,7 @@ zabbix_export:
                   throw "Failed to parse response received from API.";
                 }
               },
-            
+
               getMetricsData: function () {
                 var data = {};
                 endpoints = {
@@ -181,15 +181,15 @@ zabbix_export:
                   license: "api/v1/clusters/" + Ootbi.params.cluster_id + "/license",
                   alerts: "api/v1/alerts",
                 };
-            
+
                 Object.keys(endpoints).forEach(function (key) {
                   data[key] = Ootbi.request(Ootbi.params.api_endpoint + endpoints[key]);
                 });
-            
+
                 return data;
               },
             };
-            
+
             try {
               Ootbi.setParams(JSON.parse(value));
               Ootbi.login();
@@ -406,7 +406,7 @@ zabbix_export:
             var Ootbi = {
               params: {},
               token: "",
-            
+
               setParams: function (params) {
                 ["api_endpoint", "user", "password", "cluster_id", "host_id"].forEach(function (field) {
                   if (
@@ -417,7 +417,7 @@ zabbix_export:
                     throw "Required param is not set: " + field + ".";
                   }
                 });
-            
+
                 Ootbi.params = params;
                 if (
                   typeof Ootbi.params.api_endpoint === "string" &&
@@ -426,7 +426,7 @@ zabbix_export:
                   Ootbi.params.api_endpoint += "/";
                 }
               },
-            
+
               login: function () {
                 var resp,
                   login = new HttpRequest();
@@ -442,11 +442,11 @@ zabbix_export:
                 }
                 login.addHeader("Content-Type: application/json");
                 resp = login.post(Ootbi.params.api_endpoint + "api/v1/account/login", data);
-            
+
                 if (login.getStatus() !== 200 || resp === null) {
                   throw "Login failed with status code " + login.getStatus() + ": " + resp;
                 }
-            
+
                 try {
                   resp = JSON.parse(resp);
                 } catch (error) {
@@ -457,7 +457,7 @@ zabbix_export:
                 }
                 Ootbi.token = resp["token"];
               },
-            
+
               request: function (url) {
                 var response,
                   request = new HttpRequest();
@@ -486,22 +486,22 @@ zabbix_export:
                   throw "Failed to parse response received from API. " + error;
                 }
               },
-            
+
               getMetricsData: function () {
                 var data = {};
                 endpoints = {
                   hosts: "api/v1/clusters/" + Ootbi.params.cluster_id + "/nodes",
                   disks: "api/v1/clusters/" + Ootbi.params.cluster_id + "/nodes/" + Ootbi.params.host_id + "/disks",
                 };
-            
+
                 Object.keys(endpoints).forEach(function (key) {
                   data[key] = Ootbi.request(Ootbi.params.api_endpoint + endpoints[key]);
                 });
-            
+
                 return data;
               },
             };
-            
+
             try {
               Ootbi.setParams(JSON.parse(value));
               Ootbi.login();

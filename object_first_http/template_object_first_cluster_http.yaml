@@ -42,11 +42,20 @@ zabbix_export:
               value: status
           triggers:
             - uuid: e87bdcf5b6ae42b1959dbbc8340ffef0
-              expression: 'find(/Object First OOTBI Cluster by HTTP/ootbi.get.cluster.status,,"like","OK")=0'
-              name: 'Object First OOTBI: Cluster is not healthy'
+              expression: 'find(/Object First OOTBI Cluster by HTTP/ootbi.get.cluster.status,,"like","CRITICAL")=1'
+              name: 'Object First OOTBI: Cluster status critical'
               opdata: '{ITEM.LASTVALUE1}'
               priority: HIGH
-              description: 'Cluster reports it''s not healthy. Please inspect the cluster.'
+              description: 'Cluster reports its status is critical. Please inspect the cluster.'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: d8259d23cfe041caac45f070b04507f2
+              expression: 'find(/Object First OOTBI Cluster by HTTP/ootbi.get.cluster.status,,"like","WARNING")=1'
+              name: 'Object First OOTBI: Cluster status warning'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'Cluster reports its status is warning. Please inspect the cluster.'
               tags:
                 - tag: scope
                   value: availability
@@ -300,11 +309,20 @@ zabbix_export:
               value: status
           triggers:
             - uuid: 369c34dd7ebc49e583097201fb3028c6
-              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.disk.status,,"like","ok")=0'
-              name: 'Object First OOTBI Disks not healthy'
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.disk.status,,"like","critical")=1'
+              name: 'Object First OOTBI: Disks status critical'
               opdata: '{ITEM.LASTVALUE1}'
               priority: HIGH
-              description: 'The host reports its disks are healthy. Please inspect the host.'
+              description: 'The cluster reports that the host has disks that are in a critical state. Please inspect the host.'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: e23ff7298adf45168a3b55ddbd41970e
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.disk.status,,"like","warning")=1'
+              name: 'Object First OOTBI: Disks status warning'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'The cluster reports that the host has disks that are warning. Please inspect the host.'
               tags:
                 - tag: scope
                   value: availability
@@ -332,7 +350,7 @@ zabbix_export:
           triggers:
             - uuid: 3296f6da94cc434ba742dfafef60a35b
               expression: 'length(last(/Object First OOTBI Host by HTTP/ootbi.get.errors))>0'
-              name: 'There are errors in requests to API'
+              name: 'Object First OOTBI: There are errors in requests to API'
               opdata: '{ITEM.LASTVALUE1}'
               priority: AVERAGE
               description: 'Zabbix has received errors in response to API requests.'
@@ -361,11 +379,38 @@ zabbix_export:
               value: status
           triggers:
             - uuid: 4e72f96ce6454f75872c0c64a1b30966
-              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Ok")=0'
-              name: 'Object First OOTBI Host is not healthy'
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Critical")=1'
+              name: 'Object First OOTBI: Host status is critical'
               opdata: '{ITEM.LASTVALUE1}'
               priority: HIGH
-              description: 'The host reports its not healthy. Please inspect the host.'
+              description: 'The cluster reports that the host status is critical. Please inspect the host.'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: c0e5536e34a84736bdd05859a60ee1ba
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Offline")=1'
+              name: 'Object First OOTBI: Host status is offline'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: DISASTER
+              description: 'The cluster reports that the host status is offline. Please inspect the host.'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: 88af6ba66a124afaba6a364f47fff495
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Unknown")=1'
+              name: 'Object First OOTBI: Host status is unknown'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'The cluster reports that the host status is unknown. Please inspect the host.'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: c98ff0a5070f4487a5893fca86992655
+              expression: 'find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Warning")=1'
+              name: 'Object First OOTBI: Host status is warning'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'The cluster reports that the host status is warning. Please inspect the host.'
               tags:
                 - tag: scope
                   value: availability
@@ -579,12 +624,19 @@ zabbix_export:
                 - tag: disk
                   value: '{#SLOT}'
               trigger_prototypes:
+                - uuid: 20d9617c0ce0461b9cb6fc9e012e3bf5
+                  expression: 'find(/Object First OOTBI Host by HTTP/ootbi.disk.status[{#SLOT}],,"like","critical")=1'
+                  name: 'Object First OOTBI: Disk in slot {#SLOT} status critical'
+                  opdata: '{ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  description: 'The Disk in {#SLOT} has a critical status. Please check the disk in bay {#BAY}. Please download the support bundle and contact Object First Support.'
+                  manual_close: 'YES'
                 - uuid: 75b5173bb0b5419190871e6bf9fc93fb
-                  expression: 'find(/Object First OOTBI Host by HTTP/ootbi.disk.status[{#SLOT}],,"like","ok")=0'
-                  name: 'Object First OOTBI: Disk in slot {#SLOT} not ok'
+                  expression: 'find(/Object First OOTBI Host by HTTP/ootbi.disk.status[{#SLOT}],,"like","warning")=1'
+                  name: 'Object First OOTBI: Disk in slot {#SLOT} status warning'
                   opdata: '{ITEM.LASTVALUE1}'
                   priority: AVERAGE
-                  description: 'The Disk in {#SLOT} is failed. Please check the disk in bay {#BAY}. Please download the support bundle and contact Object First Support.'
+                  description: 'The Disk in {#SLOT} has a warning status. Please check the disk in bay {#BAY}. Please download the support bundle and contact Object First Support.'
                   manual_close: 'YES'
           master_item:
             key: ootbi.get.metrics

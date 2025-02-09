@@ -75,15 +75,16 @@ This template is designed to monitor an Object First OOTBI Cluster.
 
 |Name|Description|Type|Key and additional info|
 |----|-----------|----|-----------------------|
-|Get metrics|The result of API requests is expressed in the JSON.|Script|ootbi.get.metrics|
-|Get errors|The errors from API requests.|Dependent item|ootbi.get.errors<br />**Preprocessing**<ul><li>JSON Path: `$.error`⛔️Custom on fail: Set value to</li><li>Discard unchanged with heartbeat: `1h`</li></ul>|
 |Cluster Status|Get the cluster status|Dependent item|ootbi.get.cluster.status<br />**Preprocessing**<ul><li>JSON Path: `$.cluster.status`</li><li>Discard unchanged with heartbeat: `1h`</li></ul>|
+|Get errors|The errors from API requests.|Dependent item|ootbi.get.errors<br />**Preprocessing**<ul><li>JSON Path: `$.error`⛔️Custom on fail: Set value to</li><li>Discard unchanged with heartbeat: `1h`</li></ul>|
+|Get metrics|The result of API requests is expressed in the JSON.|Script|ootbi.get.metrics|
 
 ### Triggers for Object First OOTBI Cluster by HTTP
 
 |Name|Description|Expression|Severity|Dependencies and additional info|
 |----|-----------|----------|--------|--------------------------------|
-|Object First OOTBI: Cluster is not healthy|<p>Cluster reports it's not healthy. Please inspect the cluster.</p>|`find(/Object First OOTBI Cluster by HTTP/ootbi.get.cluster.status,,"like","OK")=0`|High||
+|Object First OOTBI: Cluster status critical|<p>Cluster reports its status is critical. Please inspect the cluster.</p>|`find(/Object First OOTBI Cluster by HTTP/ootbi.get.cluster.status,,"like","CRITICAL")=1`|High||
+|Object First OOTBI: Cluster status warning|<p>Cluster reports its status is warning. Please inspect the cluster.</p>|`find(/Object First OOTBI Cluster by HTTP/ootbi.get.cluster.status,,"like","WARNING")=1`|Average||
 |Object First OOTBI: There are errors in requests to API|<p>Zabbix has received errors in response to API requests.</p>|`length(last(/Object First OOTBI Cluster by HTTP/ootbi.get.errors))>0`|Average||
 
 ### LLD rule Node discovery
@@ -126,19 +127,23 @@ This template is designed to monitor an Object First OOTBI Host and will automat
 
 |Name|Description|Type|Key and additional info|
 |----|-----------|----|-----------------------|
-|Get metrics|The result of API requests is expressed in the JSON.|Script|ootbi.get.metrics|
 |Get errors|The errors from API requests.|Dependent item|ootbi.get.errors<br />**Preprocessing**<ul><li>JSON Path: `$.error`⛔️Custom on fail: Set value to</li><li>Discard unchanged with heartbeat: `1h`</li></ul>|
-|Host Status|Get the host status.|Dependent item|ootbi.get.host.status<br />**Preprocessing**<ul><li>JSON Path: `$.hosts.members.[?(@.id=='{$OOTBI.HOST.ID}')].status.first()`</li><li>Discard unchanged with heartbeat: `1h`</li></ul>|
+|Get metrics|The result of API requests is expressed in the JSON.|Script|ootbi.get.metrics|
 |Global Disks Status|Get the global disk status|Dependent item|ootbi.get.disk.status<br />**Preprocessing**<ul><li>JSON Path: `$.disks.status`</li><li>Discard unchanged with heartbeat: `1h`</li></ul>|
+|Host Status|Get the host status.|Dependent item|ootbi.get.host.status<br />**Preprocessing**<ul><li>JSON Path: `$.hosts.members.[?(@.id=='{$OOTBI.HOST.ID}')].status.first()`</li><li>Discard unchanged with heartbeat: `1h`</li></ul>|
 |Uptime|The uptime of the node.|Dependent item|ootbi.get.host.uptime<br />**Preprocessing**<ul><li>JSON Path: `$.hosts.members.[?(@.id=='{$OOTBI.HOST.ID}')].uptimeInSec.first()`</li></ul>|
 
 ### Triggers for Object First OOTBI Host by HTTP
 
 |Name|Description|Expression|Severity|Dependencies and additional info|
 |----|-----------|----------|--------|--------------------------------|
+|Object First OOTBI: Disks status critical|<p>The cluster reports that the host has disks that are in a critical state. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.disk.status,,"like","critical")=1`|High||
+|Object First OOTBI: Disks status warning|<p>The cluster reports that the host has disks that are warning. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.disk.status,,"like","warning")=1`|Average||
+|Object First OOTBI: Host status is critical|<p>The cluster reports that the host status is critical. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Critical")=1`|High||
+|Object First OOTBI: Host status is offline|<p>The cluster reports that the host status is offline. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Offline")=1`|Disaster||
+|Object First OOTBI: Host status is unknown|<p>The cluster reports that the host status is unknown. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Unknown")=1`|Warning||
+|Object First OOTBI: Host status is warning|<p>The cluster reports that the host status is warning. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Warning")=1`|Average||
 |Object First OOTBI: Node restarted (uptime < 10m)|<p>The cluster node's uptime is less than 10 minutes.</p>|`last(/Object First OOTBI Host by HTTP/ootbi.get.host.uptime)<10`|Average||
-|Object First OOTBI Disks not healthy|<p>The host reports its disks are healthy. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.disk.status,,"like","ok")=0`|High||
-|Object First OOTBI Host is not healthy|<p>The host reports its not healthy. Please inspect the host.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.get.host.status,,"like","Ok")=0`|High||
 |Object First OOTBI: There are errors in requests to API|<p>Zabbix has received errors in response to API requests.</p>|`length(last(/Object First OOTBI Host by HTTP/ootbi.get.errors))>0`|Average||
 
 ### LLD rule Disk Discovery
@@ -158,7 +163,8 @@ This template is designed to monitor an Object First OOTBI Host and will automat
 
 |Name|Description|Expression|Severity|Dependencies and additional info|
 |----|-----------|----------|--------|--------------------------------|
-|Object First OOTBI: Disk in slot {#SLOT} not ok||`find(/Object First OOTBI Host by HTTP/ootbi.disk.status[{#SLOT}],,"like","ok")=0`|Average|**Manual close**: Yes|
+|Object First OOTBI: Disk in slot {#SLOT} status critical|<p>The Disk in `{#SLOT}` has a critical status. Please check the disk in bay `{#BAY}`. Please download the support bundle and contact Object First Support.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.disk.status[{#SLOT}],,"like","critical")=1`|High|**Manual close**: Yes|
+|Object First OOTBI: Disk in slot {#SLOT} status warning|<p>The Disk in `{#SLOT}` has a warning status. Please check the disk in bay `{#BAY}`. Please download the support bundle and contact Object First Support.</p>|`find(/Object First OOTBI Host by HTTP/ootbi.disk.status[{#SLOT}],,"like","warning")=1`|Average|**Manual close**: Yes|
 
 ## Feedback
 

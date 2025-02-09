@@ -1,0 +1,24 @@
+name: Changelog
+on:
+  release:
+    types:
+      - created
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission.
+      # https://github.blog/changelog/2023-02-02-github-actions-updating-the-default-github_token-permissions-to-read-only/
+      contents: write
+
+    timeout-minutes: 5
+
+    steps:
+      - name: "Generate release changelog"
+        uses: janheinrichmerker/action-github-changelog-generator@v2.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: stefanzweifel/git-auto-commit-action@v5.1.0
+        with:
+          commit_message: Auto update markdown TOC

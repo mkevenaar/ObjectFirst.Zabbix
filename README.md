@@ -3,6 +3,7 @@
 [![Version](https://img.shields.io/github/v/release/mkevenaar/ObjectFirst.Zabbix.svg?color=brightgreen&label=version)](https://github.com/mkevenaar/ObjectFirst.Zabbix/releases/latest)
 [![Released](https://img.shields.io/badge/dynamic/json.svg?color=brightgreen&label=released&url=https://api.github.com/repos/mkevenaar/ObjectFirst.Zabbix/releases&query=$[0].published_at)](https://github.com/mkevenaar/ObjectFirst.Zabbix/releases/latest)
 ![GitHub Releases (all releases)](https://img.shields.io/github/downloads/mkevenaar/ObjectFirst.Zabbix/total.svg)
+[![Changelog](https://img.shields.io/badge/GitHub-Changelog-green)](https://github.com/mkevenaar/ObjectFirst.Zabbix/blob/main/CHANGELOG.md)
 
 <!--ts-->
 * [Object First OOTBI Cluster by HTTP](#object-first-ootbi-cluster-by-http)

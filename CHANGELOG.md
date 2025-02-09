@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/mkevenaar/ObjectFirst.Zabbix/tree/0.3.0) (2025-02-09)
+
+[Full Changelog](https://github.com/mkevenaar/ObjectFirst.Zabbix/compare/0.2.0...0.3.0)
+
+**Fixed bugs:**
+
+- Logout after fetching data [\#9](https://github.com/mkevenaar/ObjectFirst.Zabbix/issues/9)
+
+**Closed issues:**
+
+- More information regarding statuses [\#8](https://github.com/mkevenaar/ObjectFirst.Zabbix/issues/8)
+
 ## [0.2.0](https://github.com/mkevenaar/ObjectFirst.Zabbix/tree/0.2.0) (2025-01-25)
 
 [Full Changelog](https://github.com/mkevenaar/ObjectFirst.Zabbix/compare/0.1.0...0.2.0)

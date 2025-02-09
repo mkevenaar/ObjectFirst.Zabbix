@@ -1,9 +1,9 @@
 name: Changelog
 on:
   workflow_dispatch:
-  release:
-    types:
-      - created
+  push:
+    branches:
+      - release/*
 jobs:
   changelog:
     runs-on: ubuntu-latest
@@ -23,4 +23,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: stefanzweifel/git-auto-commit-action@v5.1.0
         with:
-          commit_message: Auto update markdown TOC
+          commit_message: Auto update changelog

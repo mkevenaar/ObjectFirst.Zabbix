@@ -154,6 +154,21 @@ zabbix_export:
                 Ootbi.token = resp["token"];
               },
 
+              logout: function () {
+                var resp,
+                  logout = new HttpRequest();
+                if (
+                  typeof Ootbi.params.http_proxy !== "undefined" &&
+                  Ootbi.params.http_proxy !== ""
+                ) {
+                  logout.setProxy(Ootbi.params.http_proxy);
+                }
+                if (Ootbi.token) {
+                  logout.addHeader("Authorization: " + Ootbi.token);
+                  resp = logout.post(Ootbi.params.api_endpoint + "api/v1/account/logout");
+                }
+              },
+
               request: function (url) {
                 var response,
                   request = new HttpRequest();
@@ -200,9 +215,12 @@ zabbix_export:
             };
 
             try {
+              var data;
               Ootbi.setParams(JSON.parse(value));
               Ootbi.login();
-              return JSON.stringify(Ootbi.getMetricsData());
+              data = JSON.stringify(Ootbi.getMetricsData());
+              Ootbi.logout();
+              return data;
             } catch (error) {
               error += String(error).endsWith(".") ? "" : ".";
               Zabbix.log(3, "[ OOTBI ] ERROR: " + error);
@@ -503,6 +521,21 @@ zabbix_export:
                 Ootbi.token = resp["token"];
               },
 
+              logout: function () {
+                var resp,
+                  logout = new HttpRequest();
+                if (
+                  typeof Ootbi.params.http_proxy !== "undefined" &&
+                  Ootbi.params.http_proxy !== ""
+                ) {
+                  logout.setProxy(Ootbi.params.http_proxy);
+                }
+                if (Ootbi.token) {
+                  logout.addHeader("Authorization: " + Ootbi.token);
+                  resp = logout.post(Ootbi.params.api_endpoint + "api/v1/account/logout");
+                }
+              },
+
               request: function (url) {
                 var response,
                   request = new HttpRequest();
@@ -528,7 +561,7 @@ zabbix_export:
                 try {
                   return JSON.parse(response);
                 } catch (error) {
-                  throw "Failed to parse response received from API. " + error;
+                  throw "Failed to parse response received from API.";
                 }
               },
 
@@ -548,9 +581,12 @@ zabbix_export:
             };
 
             try {
+              var data;
               Ootbi.setParams(JSON.parse(value));
               Ootbi.login();
-              return JSON.stringify(Ootbi.getMetricsData());
+              data = JSON.stringify(Ootbi.getMetricsData());
+              Ootbi.logout();
+              return data;
             } catch (error) {
               error += String(error).endsWith(".") ? "" : ".";
               Zabbix.log(3, "[ OOTBI ] ERROR: " + error);

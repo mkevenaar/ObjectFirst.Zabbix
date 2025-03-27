@@ -1,9 +1,9 @@
 # Object First OOTBI Cluster by HTTP
 
-[![Version](https://img.shields.io/github/v/release/mkevenaar/ObjectFirst.Zabbix.svg?color=brightgreen&label=version)](https://github.com/mkevenaar/ObjectFirst.Zabbix/releases/latest)
-[![Released](https://img.shields.io/badge/dynamic/json.svg?color=brightgreen&label=released&url=https://api.github.com/repos/mkevenaar/ObjectFirst.Zabbix/releases&query=$[0].published_at)](https://github.com/mkevenaar/ObjectFirst.Zabbix/releases/latest)
-[![GitHub Releases (all releases)](https://img.shields.io/github/downloads/mkevenaar/ObjectFirst.Zabbix/total.svg)](https://github.com/mkevenaar/ObjectFirst.Zabbix/releases/latest)
-[![Changelog](https://img.shields.io/badge/GitHub-Changelog-green)](https://github.com/mkevenaar/ObjectFirst.Zabbix/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/github/v/release/ObjectFirstCommunity/objectfirstcommunity-zabbix.svg?color=brightgreen&label=version)](https://github.com/ObjectFirstCommunity/objectfirstcommunity-zabbix/releases/latest)
+[![Released](https://img.shields.io/badge/dynamic/json.svg?color=brightgreen&label=released&url=https://api.github.com/repos/ObjectFirstCommunity/objectfirstcommunity-zabbix/releases&query=$[0].published_at)](https://github.com/ObjectFirstCommunity/objectfirstcommunity-zabbix/releases/latest)
+[![GitHub Releases (all releases)](https://img.shields.io/github/downloads/ObjectFirstCommunity/objectfirstcommunity-zabbix/total.svg)](https://github.com/ObjectFirstCommunity/objectfirstcommunity-zabbix/releases/latest)
+[![Changelog](https://img.shields.io/badge/GitHub-Changelog-green)](https://github.com/ObjectFirstCommunity/objectfirstcommunity-zabbix/blob/main/CHANGELOG.md)
 
 <!--ts-->
 * [Object First OOTBI Cluster by HTTP](#object-first-ootbi-cluster-by-http)
@@ -29,7 +29,7 @@
   * [Feedback](#feedback)
 <!--te-->
 
-## Overview
+## 📗 Documentation
 
 This template is designed to monitor an Object First OOTBI Cluster.
 
@@ -43,7 +43,7 @@ This template has been tested on Object First OOTBI 1.5.54.10104 (VSA).
 
 ## Setup
 
-1. Download the latest [release](https://github.com/mkevenaar/ObjectFirst.Zabbix/releases/latest)
+1. Download the latest [release](https://github.com/ObjectFirstCommunity/objectfirstcommunity-zabbix/releases/latest)
 1. Create a user to monitor the service or use an existing user.
 1. Create a host with the name of your cluster and link the `Object First OOTBI Cluster by HTTP` template to it.
 1. Configure the following macros: {$OOTBI.API.URL}, {$OOTBI.CLUSTER.ID}, {$OOTBI.USER}, and {$OOTBI.PASSWORD} ([details](#macros-for-object-first-ootbi-cluster-by-http))
@@ -168,4 +168,15 @@ This template is designed to monitor an Object First OOTBI Host and will automat
 
 ## Feedback
 
-Please report any issues with the template by opening an [Issue](https://github.com/mkevenaar/ObjectFirst.Zabbix/issues) on GitHub
+
+## ✍ Contributions
+
+We welcome contributions from the community! We encourage you to create [issues](https://github.com/ObjectFirstCommunity/objectfirstcommunity-zabbix/issues/new/choose) for Bugs & Feature Requests and submit Pull Requests. For more detailed information, refer to our [Contributing Guide](CONTRIBUTING.md).
+
+## 🤝🏾 License
+
+* [MIT License](LICENSE)
+
+## 🤔 Questions
+
+If you have any questions or something is unclear, please don't hesitate to [create an issue](https://github.com/ObjectFirstCommunity/objectfirstcommunity-zabbix/issues/new/choose) and let us know!

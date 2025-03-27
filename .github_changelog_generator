@@ -1,5 +1,5 @@
-project=ObjectFirst.Zabbix
-user=mkevenaar
+project=objectfirstcommunity-zabbix
+user=ObjectFirstCommunity
 breaking-labels="Breaking Change"
 enhancement-labels="Improvement"
 enhancement-label="**Implemented improvements:**"

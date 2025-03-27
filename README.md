@@ -7,7 +7,7 @@
 
 <!--ts-->
 * [Object First OOTBI Cluster by HTTP](#object-first-ootbi-cluster-by-http)
-  * [Overview](#overview)
+  * [📗 Documentation](#-documentation)
   * [Requirements](#requirements)
   * [Tested versions](#tested-versions)
   * [Setup](#setup)
@@ -27,6 +27,9 @@
     * [Item prototypes for Disk Discovery](#item-prototypes-for-disk-discovery)
     * [Trigger prototypes for Disk Discovery](#trigger-prototypes-for-disk-discovery)
   * [Feedback](#feedback)
+  * [✍ Contributions](#-contributions)
+  * [🤝🏾 License](#-license)
+  * [🤔 Questions](#-questions)
 <!--te-->
 
 ## 📗 Documentation
